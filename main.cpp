@@ -3,12 +3,17 @@
 #include <cstdlib>
 #include <conio.h>
 #include <time.h>
+
+#include <termios.h>   // cho tcflush, TCIFLUSH
+#include <unistd.h>    // cho STDIN_FILENO
+
 #define MINX 2
 #define MINY 2
 #define MAXX 35
 #define MAXY 20
 using namespace std;
 void gotoxy( int column, int line );
+void flushInput();
 struct Point{
     int x,y;
 };
@@ -51,6 +56,17 @@ void VeKhung(){
             printf("+");
         }
 }
+
+// Delete Buffer Input
+void flushInput()
+{
+    // Không cần flush trên Windows với _getch()
+}
+void flushInput()
+{
+    tcflush(STDIN_FILENO, TCIFLUSH);
+}
+
 int main()
 {
     CONRAN r;
