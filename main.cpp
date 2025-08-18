@@ -9,6 +9,8 @@
 #define MAXY 20
 using namespace std;
 void gotoxy( int column, int line );
+bool kbhit();
+char getch();
 struct Point{
     int x,y;
 };
@@ -50,6 +52,39 @@ void VeKhung(){
             gotoxy(i,j);
             printf("+");
         }
+}
+bool kbhit()
+{
+    struct termios oldt, newt;
+    struct timeval tv = {0, 50000}; // Giảm timeout xuống 50ms
+    fd_set fds;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 0;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    int result = select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return result > 0 && FD_ISSET(STDIN_FILENO, &fds);
+}
+
+char getch()
+{
+    char c;
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 1;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    if (read(STDIN_FILENO, &c, 1) < 0)
+        c = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return c;
 }
 int main()
 {
