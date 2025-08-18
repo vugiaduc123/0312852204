@@ -9,6 +9,7 @@
 #define MAXY 20
 using namespace std;
 void gotoxy( int column, int line );
+void ShowConsoleCursor(bool);
 struct Point{
     int x,y;
 };
@@ -43,6 +44,14 @@ public:
         }
     }
 };
+
+void ShowConsoleCursor(bool showFlag)
+{
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
+    cursorInfo.bVisible = showFlag;
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
+}
 void VeKhung(){
     for (int i = MINX ; i<=MAXX ; i++)
         for (int j = MINX ; j<=MAXY ; j++)
