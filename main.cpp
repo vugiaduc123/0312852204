@@ -23,6 +23,11 @@ int main()
     return 0;
 }
 
+void gotoxy(int x, int y)
+{
+    printf("\033[%d;%dH", y + 1, x + 1);
+    fflush(stdout);
+}
 
 void setBufferedInput(bool enable)
 {
@@ -49,6 +54,7 @@ void setBufferedInput(bool enable)
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
         enabled = false;
     }
+}
 
 // Delete Buffer Input
 void flushInput()
