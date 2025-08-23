@@ -7,7 +7,7 @@
 #include <time.h>
 
 using namespace std;
-
+void displayScore();
 void setBufferedInput(bool);
 
 void ShowConsoleCursor(bool showFlag)
@@ -65,4 +65,20 @@ void flushInput()
 void flushInput()
 {
     tcflush(STDIN_FILENO, TCIFLUSH);
+}
+
+void displayScore()
+{
+    gotoxy(WIDTH + 5, 2);
+    std::cout << "Your score: " << score << std::flush;
+    gotoxy(WIDTH + 5, 8);
+    std::cout << "Up: w        " << std::flush;
+    gotoxy(WIDTH + 5, 9);
+    std::cout << "Right: d     " << std::flush;
+    gotoxy(WIDTH + 5, 10);
+    std::cout << "Down: s      " << std::flush;
+    gotoxy(WIDTH + 5, 11);
+    std::cout << "Left: a      " << std::flush;
+    gotoxy(WIDTH + 5, 14);
+    std::cout << "Note: Press q to quit" << std::flush;
 }
