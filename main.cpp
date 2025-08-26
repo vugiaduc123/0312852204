@@ -7,6 +7,10 @@
 #include <time.h>
 
 using namespace std;
+
+#define WIDTH 40
+int score = 0;
+
 void displayScore();
 void setBufferedInput(bool);
 void showEndMenu();
