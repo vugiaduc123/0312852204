@@ -10,6 +10,7 @@ using namespace std;
 void displayScore();
 void setBufferedInput(bool);
 void clearSnake();
+void drawSnakePart(Point);
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -61,6 +62,12 @@ void gotoxy(int x, int y)
 {
     printf("\033[%d;%dH", y + 1, x + 1);
     fflush(stdout);
+}
+
+void drawSnakePart(Point p)
+{
+    gotoxy(p.x, p.y);
+    std::cout << BODY << std::flush;
 }
 
 void setBufferedInput(bool enable)
