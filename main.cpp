@@ -1,20 +1,60 @@
 #include <iostream>
+#include <vector>
+#include <ctime>
+#include <cctype>
+
+#ifdef _WIN32
 #include <windows.h>
+#include <conio.h>
+#else
 #include <termios.h> // cho tcflush, TCIFLUSH
 #include <unistd.h>  // cho STDIN_FILENO
-#include <cstdlib>
-#include <conio.h>
-#include <time.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#endif
+
+#include <stdio.h>
 
 using namespace std;
 
 #define WIDTH 40
+#define HEIGHT 20
 int score = 0;
+
+/*
+ * Enum
+ */
+enum class Direction
+{
+    up,
+    right,
+    down,
+    left
+};
+
+// Each point is a part of the snake
+struct Point
+{
+    int x;
+    int y;
+};
+std::vector<Point> snake = {
+    {WIDTH / 2 + 2, HEIGHT / 2},
+    {WIDTH / 2 + 1, HEIGHT / 2},
+    {WIDTH / 2, HEIGHT / 2},
+    {WIDTH / 2 - 1, HEIGHT / 2},
+    {WIDTH / 2 - 2, HEIGHT / 2}};
+Direction direction = Direction::right;
+Point prevTail;
 
 void displayScore();
 void setBufferedInput(bool);
 void showEndMenu();
-
+void startGame();
+void move();
+#ifdef _WIN32
+// Windows-specific implementations
 void ShowConsoleCursor(bool showFlag)
 {
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -22,6 +62,54 @@ void ShowConsoleCursor(bool showFlag)
     cursorInfo.bVisible = showFlag;
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 }
+void setBufferedInput(bool enable)
+{
+    // Không cần cài đặt trên Windows với _getch()
+}
+void flushInput()
+{
+    // Không cần flush trên Windows với _getch()
+}
+
+#else
+void ShowConsoleCursor(bool showFlag)
+{
+    if (showFlag)
+        printf("\e[?25h");
+    else
+        printf("\e[?25l");
+    fflush(stdout);
+}
+
+void setBufferedInput(bool enable)
+{
+    static bool enabled = true;
+    static struct termios oldt;
+    struct termios newt;
+    if (enable && !enabled)
+    {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        enabled = true;
+    }
+    else if (!enable && enabled)
+    {
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        newt.c_cc[VMIN] = 1;
+        newt.c_cc[VTIME] = 0;
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+        enabled = false;
+    }
+}
+
+// Delete Buffer Input
+void flushInput()
+{
+    tcflush(STDIN_FILENO, TCIFLUSH);
+}
+#endif
+
 bool kbhit()
 {
     struct termios oldt, newt;
@@ -67,43 +155,30 @@ void gotoxy(int x, int y)
     fflush(stdout);
 }
 
-void setBufferedInput(bool enable)
+// Move snake function
+void move()
 {
-    // Không cần cài đặt trên Windows với _getch()
-}
-
-void setBufferedInput(bool enable)
-{
-    static bool enabled = true;
-    static struct termios oldt;
-    struct termios newt;
-    if (enable && !enabled)
+    Point newHead = snake[0];
+    switch (direction)
     {
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-        enabled = true;
+    case Direction::up:
+        newHead.y--;
+        break;
+    case Direction::down:
+        newHead.y++;
+        break;
+    case Direction::left:
+        newHead.x--;
+        break;
+    case Direction::right:
+        newHead.x++;
+        break;
     }
-    else if (!enable && enabled)
-    {
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);
-        newt.c_cc[VMIN] = 1;
-        newt.c_cc[VTIME] = 0;
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-        enabled = false;
-    }
+    prevTail = snake.back();
+    snake.insert(snake.begin(), newHead);
+    snake.pop_back();
 }
 
-// Delete Buffer Input
-void flushInput()
-{
-    // Không cần flush trên Windows với _getch()
-}
-
-void flushInput()
-{
-    tcflush(STDIN_FILENO, TCIFLUSH);
-}
 // Show end menu section
 void clearScreen()
 {
