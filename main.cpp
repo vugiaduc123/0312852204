@@ -9,6 +9,7 @@
 using namespace std;
 void displayScore();
 void setBufferedInput(bool);
+void resetSnake();
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -81,4 +82,16 @@ void displayScore()
     std::cout << "Left: a      " << std::flush;
     gotoxy(WIDTH + 5, 14);
     std::cout << "Note: Press q to quit" << std::flush;
+}
+
+void resetSnake()
+{
+    score = 0;
+    direction = Direction::right;
+    snake.clear();
+    snake.push_back({ WIDTH / 2 + 2, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 + 1, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
 }
