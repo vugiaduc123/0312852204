@@ -132,3 +132,26 @@ void clearSnake()
         std::cout << ' ' << std::flush;
     }
 }
+void drawSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        if (i == 0)
+        {
+            gotoxy(snake[0].x, snake[0].y);
+            char headChar;
+            switch (direction)
+            {
+                case Direction::up: headChar = '^'; break;
+                case Direction::down: headChar = 'v'; break;
+                case Direction::left: headChar = '<'; break;
+                case Direction::right: headChar = '>'; break;
+            }
+            std::cout << headChar << std::flush;
+        }
+        else
+        {
+            drawSnakePart(snake[i]);
+        }
+    }
+}
