@@ -11,6 +11,7 @@ void displayScore();
 void setBufferedInput(bool);
 void clearSnake();
 void drawSnakePart(Point);
+void drawSnake();
 
 void ShowConsoleCursor(bool showFlag)
 {
