@@ -1,15 +1,63 @@
 #include <iostream>
+#include <vector>
+#include <ctime>
+#include <cctype>
+
+#ifdef _WIN32
 #include <windows.h>
+#include <conio.h>
+#else
 #include <termios.h> // cho tcflush, TCIFLUSH
 #include <unistd.h>  // cho STDIN_FILENO
-#include <cstdlib>
-#include <conio.h>
-#include <time.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#endif
+
+#include <stdio.h>
 
 using namespace std;
+
+#define WIDTH 40
+#define HEIGHT 20
+int score = 0;
+
+/*
+ * Enum
+ */
+enum class Direction
+{
+    up,
+    right,
+    down,
+    left
+};
+
+// Each point is a part of the snake
+struct Point
+{
+    int x;
+    int y;
+};
+std::vector<Point> snake = {
+    {WIDTH / 2 + 2, HEIGHT / 2},
+    {WIDTH / 2 + 1, HEIGHT / 2},
+    {WIDTH / 2, HEIGHT / 2},
+    {WIDTH / 2 - 1, HEIGHT / 2},
+    {WIDTH / 2 - 2, HEIGHT / 2}};
+Direction direction = Direction::right;
+Point prevTail;
+
 void displayScore();
 void setBufferedInput(bool);
 void resetSnake();
+void showEndMenu();
+void startGame();
+void move();
+#ifdef _WIN32
+// Windows-specific implementations
+void clearSnake();
+void drawSnakePart(Point);
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -18,21 +66,23 @@ void ShowConsoleCursor(bool showFlag)
     cursorInfo.bVisible = showFlag;
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 }
-
-int main()
-{
-    return 0;
-}
-
-void gotoxy(int x, int y)
-{
-    printf("\033[%d;%dH", y + 1, x + 1);
-    fflush(stdout);
-}
-
 void setBufferedInput(bool enable)
 {
     // Không cần cài đặt trên Windows với _getch()
+}
+void flushInput()
+{
+    // Không cần flush trên Windows với _getch()
+}
+
+#else
+void ShowConsoleCursor(bool showFlag)
+{
+    if (showFlag)
+        printf("\e[?25h");
+    else
+        printf("\e[?25l");
+    fflush(stdout);
 }
 
 void setBufferedInput(bool enable)
@@ -60,12 +110,114 @@ void setBufferedInput(bool enable)
 // Delete Buffer Input
 void flushInput()
 {
-    // Không cần flush trên Windows với _getch()
+    tcflush(STDIN_FILENO, TCIFLUSH);
+}
+#endif
+
+bool kbhit()
+{
+    struct termios oldt, newt;
+    struct timeval tv = {0, 50000}; // Giảm timeout xuống 50ms
+    fd_set fds;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 0;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    int result = select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return result > 0 && FD_ISSET(STDIN_FILENO, &fds);
 }
 
-void flushInput()
+char getch()
 {
-    tcflush(STDIN_FILENO, TCIFLUSH);
+    char c;
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 1;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    if (read(STDIN_FILENO, &c, 1) < 0)
+        c = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return c;
+}
+
+int main()
+{
+    return 0;
+}
+
+void gotoxy(int x, int y)
+{
+    printf("\033[%d;%dH", y + 1, x + 1);
+    fflush(stdout);
+}
+
+// Move snake function
+void move()
+void drawSnakePart(Point p)
+{
+    gotoxy(p.x, p.y);
+    std::cout << BODY << std::flush;
+}
+
+void setBufferedInput(bool enable)
+{
+    Point newHead = snake[0];
+    switch (direction)
+    {
+    case Direction::up:
+        newHead.y--;
+        break;
+    case Direction::down:
+        newHead.y++;
+        break;
+    case Direction::left:
+        newHead.x--;
+        break;
+    case Direction::right:
+        newHead.x++;
+        break;
+    }
+    prevTail = snake.back();
+    snake.insert(snake.begin(), newHead);
+    snake.pop_back();
+}
+
+// Show end menu section
+void clearScreen()
+{
+    system("cls");
+}
+void showEndMenu()
+{
+    clearScreen();
+    gotoxy(0, 0);
+    std::cout << "End game!" << std::endl;
+    std::cout << "Your score: " << score << std::endl;
+    std::cout << "Do you want to play again ([y]/[n]): " << std::flush;
+    setBufferedInput(true);
+    flushInput();
+    char option;
+    std::cin >> option;
+    option = tolower(option);
+    setBufferedInput(false);
+    if (option == 'y')
+    {
+        // reset lại rắn và start game
+    }
+    else
+    {
+        setBufferedInput(true);
+        clearScreen();
+        exit(0);
+    }
 }
 
 void displayScore()
@@ -94,4 +246,11 @@ void resetSnake()
     snake.push_back({ WIDTH / 2, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
+void clearSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        gotoxy(snake[i].x, snake[i].y);
+        std::cout << ' ' << std::flush;
+    }
 }
