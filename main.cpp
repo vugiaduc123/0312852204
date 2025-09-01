@@ -55,6 +55,9 @@ void startGame();
 void move();
 #ifdef _WIN32
 // Windows-specific implementations
+void clearSnake();
+void drawSnakePart(Point);
+
 void ShowConsoleCursor(bool showFlag)
 {
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -157,6 +160,13 @@ void gotoxy(int x, int y)
 
 // Move snake function
 void move()
+void drawSnakePart(Point p)
+{
+    gotoxy(p.x, p.y);
+    std::cout << BODY << std::flush;
+}
+
+void setBufferedInput(bool enable)
 {
     Point newHead = snake[0];
     switch (direction)
@@ -223,4 +233,13 @@ void displayScore()
     std::cout << "Left: a      " << std::flush;
     gotoxy(WIDTH + 5, 14);
     std::cout << "Note: Press q to quit" << std::flush;
+}
+
+void clearSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        gotoxy(snake[i].x, snake[i].y);
+        std::cout << ' ' << std::flush;
+    }
 }
