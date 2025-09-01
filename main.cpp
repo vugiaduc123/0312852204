@@ -50,6 +50,7 @@ Point prevTail;
 
 void displayScore();
 void setBufferedInput(bool);
+void resetSnake();
 void showEndMenu();
 void startGame();
 void move();
@@ -235,6 +236,16 @@ void displayScore()
     std::cout << "Note: Press q to quit" << std::flush;
 }
 
+void resetSnake()
+{
+    score = 0;
+    direction = Direction::right;
+    snake.clear();
+    snake.push_back({ WIDTH / 2 + 2, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 + 1, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
+    snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
 void clearSnake()
 {
     for (size_t i = 0; i < snake.size(); i++)
