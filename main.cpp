@@ -54,6 +54,7 @@ void resetSnake();
 void showEndMenu();
 void startGame();
 void move();
+void drawBox();
 #ifdef _WIN32
 // Windows-specific implementations
 void clearSnake();
@@ -155,6 +156,25 @@ int main()
     return 0;
 }
 
+void drawBox()
+{
+    clearScreen();
+    for (size_t i = 0; i <= WIDTH; i++)
+    {
+        gotoxy(i, 0);
+        std::cout << '=' << std::flush;
+        gotoxy(i, HEIGHT);
+        std::cout << '=' << std::flush;
+    }
+    for (size_t i = 1; i < HEIGHT; i++)
+    {
+        gotoxy(0, i);
+        std::cout << '|' << std::flush;
+        gotoxy(WIDTH, i);
+        std::cout << '|' << std::flush;
+    }
+}
+
 void gotoxy(int x, int y)
 {
     printf("\033[%d;%dH", y + 1, x + 1);
@@ -163,6 +183,7 @@ void gotoxy(int x, int y)
 
 // Move snake function
 void move()
+
 void drawSnakePart(Point p)
 {
     gotoxy(p.x, p.y);
