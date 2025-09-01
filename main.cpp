@@ -55,6 +55,7 @@ void showEndMenu();
 void startGame();
 void move();
 void drawBox();
+void drawHeadnTail();
 #ifdef _WIN32
 // Windows-specific implementations
 void clearSnake();
@@ -317,4 +318,35 @@ void genApple() {
     } while (!validPosition);  // Repeat until a valid position is found
     apple.x = x;
     apple.y = y;
+}
+
+void drawHeadnTail()
+{
+    gotoxy(snake[0].x, snake[0].y);
+    char headChar;
+    switch (direction)
+    {
+    case Direction::up:
+        headChar = '^';
+        break;
+    case Direction::down:
+        headChar = 'v';
+        break;
+    case Direction::left:
+        headChar = '<';
+        break;
+    case Direction::right:
+        headChar = '>';
+        break;
+    }
+    std::cout << headChar << std::flush;
+
+    if (snake.size() > 1)
+    {
+        gotoxy(snake[1].x, snake[1].y);
+        std::cout << '*' << std::flush;
+    }
+
+    gotoxy(prevTail.x, prevTail.y);
+    std::cout << ' ' << std::flush;
 }
