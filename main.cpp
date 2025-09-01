@@ -14,6 +14,8 @@ int score = 0;
 void displayScore();
 void setBufferedInput(bool);
 void showEndMenu();
+void clearSnake();
+void drawSnakePart(Point);
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -65,6 +67,12 @@ void gotoxy(int x, int y)
 {
     printf("\033[%d;%dH", y + 1, x + 1);
     fflush(stdout);
+}
+
+void drawSnakePart(Point p)
+{
+    gotoxy(p.x, p.y);
+    std::cout << BODY << std::flush;
 }
 
 void setBufferedInput(bool enable)
@@ -148,4 +156,13 @@ void displayScore()
     std::cout << "Left: a      " << std::flush;
     gotoxy(WIDTH + 5, 14);
     std::cout << "Note: Press q to quit" << std::flush;
+}
+
+void clearSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        gotoxy(snake[i].x, snake[i].y);
+        std::cout << ' ' << std::flush;
+    }
 }
