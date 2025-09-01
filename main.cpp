@@ -58,6 +58,8 @@ void move();
 // Windows-specific implementations
 void clearSnake();
 void drawSnakePart(Point);
+void drawSnake();
+void genApple();
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -253,4 +255,45 @@ void clearSnake()
         gotoxy(snake[i].x, snake[i].y);
         std::cout << ' ' << std::flush;
     }
+}
+void drawSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        if (i == 0)
+        {
+            gotoxy(snake[0].x, snake[0].y);
+            char headChar;
+            switch (direction)
+            {
+                case Direction::up: headChar = '^'; break;
+                case Direction::down: headChar = 'v'; break;
+                case Direction::left: headChar = '<'; break;
+                case Direction::right: headChar = '>'; break;
+            }
+            std::cout << headChar << std::flush;
+        }
+        else
+        {
+            drawSnakePart(snake[i]);
+        }
+    }
+}
+
+void genApple() {
+    int x, y;
+    bool validPosition;
+    do {
+        validPosition = true;  // Assume position is valid until proven otherwise
+        x = rand() % (WIDTH - 2) + 1;  // Random x-coordinate within bounds
+        y = rand() % (HEIGHT - 2) + 1; // Random y-coordinate within bounds
+        for (size_t i = 0; i < snake.size(); i++) {
+            if (snake[i].x == x && snake[i].y == y) {
+                validPosition = false;  // Position overlaps with snake
+                break;
+            }
+        }
+    } while (!validPosition);  // Repeat until a valid position is found
+    apple.x = x;
+    apple.y = y;
 }
