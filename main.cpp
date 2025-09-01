@@ -7,8 +7,13 @@
 #include <time.h>
 
 using namespace std;
+
+#define WIDTH 40
+int score = 0;
+
 void displayScore();
 void setBufferedInput(bool);
+void showEndMenu();
 void clearSnake();
 void drawSnakePart(Point);
 
@@ -106,6 +111,35 @@ void flushInput()
 void flushInput()
 {
     tcflush(STDIN_FILENO, TCIFLUSH);
+}
+// Show end menu section
+void clearScreen()
+{
+    system("cls");
+}
+void showEndMenu()
+{
+    clearScreen();
+    gotoxy(0, 0);
+    std::cout << "End game!" << std::endl;
+    std::cout << "Your score: " << score << std::endl;
+    std::cout << "Do you want to play again ([y]/[n]): " << std::flush;
+    setBufferedInput(true);
+    flushInput();
+    char option;
+    std::cin >> option;
+    option = tolower(option);
+    setBufferedInput(false);
+    if (option == 'y')
+    {
+        // reset lại rắn và start game
+    }
+    else
+    {
+        setBufferedInput(true);
+        clearScreen();
+        exit(0);
+    }
 }
 
 void displayScore()
