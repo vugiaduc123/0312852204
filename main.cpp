@@ -53,6 +53,7 @@ void setBufferedInput(bool);
 void resetSnake();
 void showEndMenu();
 void startGame();
+bool isHitWall();
 void move();
 #ifdef _WIN32
 // Windows-specific implementations
@@ -248,6 +249,7 @@ void resetSnake()
     snake.push_back({ WIDTH / 2, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
+}
 void clearSnake()
 {
     for (size_t i = 0; i < snake.size(); i++)
@@ -278,6 +280,11 @@ void drawSnake()
             drawSnakePart(snake[i]);
         }
     }
+}
+
+bool isHitWall()
+{
+    return snake[0].x <= 0 || snake[0].y <= 0 || snake[0].x >= WIDTH || snake[0].y >= HEIGHT;
 }
 
 void genApple() {
