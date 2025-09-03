@@ -62,6 +62,7 @@ void clearSnake();
 void drawSnakePart(Point);
 void drawSnake();
 void genApple();
+void redrawApple();
 
 void ShowConsoleCursor(bool showFlag)
 {
@@ -349,4 +350,10 @@ void drawHeadnTail()
 
     gotoxy(prevTail.x, prevTail.y);
     std::cout << ' ' << std::flush;
+}
+
+void redrawApple()
+{
+    gotoxy(apple.x, apple.y);
+    std::cout << APPLE << std::flush;
 }
