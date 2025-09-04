@@ -7,7 +7,7 @@
 #include <windows.h>
 #include <conio.h>
 #else
-#include <termios.h> // cho tcflush, TCIFLUSH
+#include <termios.h> // cho tcflu`sh, TCIFLUSH
 #include <unistd.h>  // cho STDIN_FILENO
 #include <fcntl.h>
 #include <sys/time.h>
