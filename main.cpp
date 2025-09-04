@@ -271,6 +271,8 @@ void resetSnake()
     snake.push_back({ WIDTH / 2, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
     snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
+}
+
 void clearSnake()
 {
     for (size_t i = 0; i < snake.size(); i++)
@@ -279,6 +281,67 @@ void clearSnake()
         std::cout << ' ' << std::flush;
     }
 }
+
+void showStartMenu()
+{
+    clearScreen();
+    std::cout << "Welcome to snake game!" << std::endl;
+    std::cout << "\nControl the snake to eat the apples (O) that appear on the screen\nAvoid crashing into the walls or your own body — doing so will end the game.\nHow long can you survive? Let's find out!" << std::endl;
+    std::cout << "\n\nOptions:" << std::endl;
+    std::cout << "1. Start" << std::endl;
+    std::cout << "2. Quit" << std::endl;
+    std::cout << "Your choice: " << std::flush;
+    setBufferedInput(true);
+    flushInput(); // xoá input cũ
+    int option;
+    std::cin >> option;
+    flushInput(); // xoá \n còn lại
+    setBufferedInput(false);
+    if (option == 1)
+    {
+        clearScreen();
+        std::cout << "Choose your level (1 - 5): " << std::flush;
+        int t;
+        std::cin >> t;
+        if (t < 1 || t > 5)
+            t = 1;
+        speed = 300 - t * 50;
+        clearScreen();
+        std::cout << "Tip: While playing game, you can press 'q' to quit" << std::endl;
+        gotoxy(0, 3);
+        std::cout << "Ready!" << std::flush;
+#ifdef _WIN32
+        Sleep(1000);
+#else
+        usleep(1000000);
+#endif
+        for (size_t i = 3; i > 0; i--)
+        {
+            gotoxy(0, 3);
+            std::cout << i << "         " << std::flush;
+#ifdef _WIN32
+            Sleep(1000);
+#else
+            usleep(1000000);
+#endif
+        }
+        gotoxy(0, 3);
+        std::cout << "GO!" << std::flush;
+#ifdef _WIN32
+        Sleep(1000);
+#else
+        usleep(1000000);
+#endif
+        startGame();
+    }
+    else
+    {
+        setBufferedInput(true);
+        clearScreen();
+        exit(0);
+    }
+}
+
 void drawSnake()
 {
     for (size_t i = 0; i < snake.size(); i++)
