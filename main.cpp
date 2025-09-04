@@ -53,6 +53,7 @@ void setBufferedInput(bool);
 void resetSnake();
 void showEndMenu();
 void startGame();
+bool isHitWall();
 void move();
 void drawBox();
 void drawHeadnTail();
@@ -364,6 +365,11 @@ void drawSnake()
             drawSnakePart(snake[i]);
         }
     }
+}
+
+bool isHitWall()
+{
+    return snake[0].x <= 0 || snake[0].y <= 0 || snake[0].x >= WIDTH || snake[0].y >= HEIGHT;
 }
 
 void genApple() {
