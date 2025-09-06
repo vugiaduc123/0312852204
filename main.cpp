@@ -528,6 +528,7 @@ void growing()
 {
     snake.push_back(prevTail);
 }
+
 bool isBiteItself()
 {
     Point head = snake[0];
@@ -536,6 +537,7 @@ bool isBiteItself()
             return true;
     return false;
 }
+
 bool isAteApple()
 {
     return snake[0].x == apple.x && snake[0].y == apple.y;
