@@ -78,10 +78,16 @@ void ShowConsoleCursor(bool showFlag)
     cursorInfo.bVisible = showFlag;
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 }
+
 void setBufferedInput(bool enable)
 {
+    setBufferedInput(false);
+    showStartMenu();
+    setBufferedInput(true);
+    return 0;
     // Không cần cài đặt trên Windows với _getch()
 }
+
 void flushInput()
 {
     // Không cần flush trên Windows với _getch()
