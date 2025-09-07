@@ -22,8 +22,6 @@ using namespace std;
 #define HEIGHT 20
 #define BODY '*'
 #define APPLE 'O'
-int score = 0;
-int speed = 100;
 /*
  * Enum
  */
@@ -41,6 +39,8 @@ struct Point
     int x;
     int y;
 };
+
+#pragma region GlobalVariable
 std::vector<Point> snake = {
     {WIDTH / 2 + 2, HEIGHT / 2},
     {WIDTH / 2 + 1, HEIGHT / 2},
@@ -50,24 +50,35 @@ std::vector<Point> snake = {
 Direction direction = Direction::right;
 Point prevTail;
 Point apple;
+int score = 0;
+int speed = 100;
+#pragma endregion
 
-void displayScore();
-void setBufferedInput(bool);
-void resetSnake();
-void showEndMenu();
-void startGame();
-bool isHitWall();
-void move();
-void growing();
-bool isBiteItself();
-bool isAteApple();
-void drawBox();
-void drawHeadnTail();
-void clearSnake();
+#pragma region Prototype
 void drawSnakePart(Point);
 void drawSnake();
+void gotoxy(int, int);
+void ShowConsoleCursor(bool);
+void move();
+void drawBox();
+bool isHitWall();
+bool isBiteItself();
+void drawHeadnTail();
 void genApple();
 void redrawApple();
+bool isAteApple();
+void growing();
+void displayScore();
+void showEndMenu();
+void startGame();
+void resetSnake();
+void clearSnake();
+void showStartMenu();
+bool kbhit();
+char getch();
+void flushInput();
+void setBufferedInput(bool);
+#pragma endregion
 
 #ifdef _WIN32
 // Windows-specific implementations
@@ -88,14 +99,24 @@ void setBufferedInput(bool enable)
     // Không cần cài đặt trên Windows với _getch()
 }
 
+void gotoxy(int x, int y)
+{
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
 void flushInput()
 {
     // Không cần flush trên Windows với _getch()
 }
+
 void clearScreen()
 {
     system("cls");
 }
+
 bool kbhit()
 {
     return _kbhit();
@@ -105,6 +126,7 @@ char getch()
 {
     return _getch();
 }
+
 #else
 void ShowConsoleCursor(bool showFlag)
 {
@@ -185,6 +207,9 @@ char getch()
 
 int main()
 {
+    setBufferedInput(false);
+    showStartMenu();
+    setBufferedInput(true);
     return 0;
 }
 // show start menu section
@@ -434,6 +459,7 @@ void clearSnake()
         std::cout << ' ' << std::flush;
     }
 }
+
 void drawSnake()
 {
     for (size_t i = 0; i < snake.size(); i++)
@@ -530,11 +556,6 @@ void redrawApple()
     std::cout << APPLE << std::flush;
 }
 
-void growing()
-{
-    snake.push_back(prevTail);
-}
-
 bool isBiteItself()
 {
     Point head = snake[0];
@@ -547,4 +568,9 @@ bool isBiteItself()
 bool isAteApple()
 {
     return snake[0].x == apple.x && snake[0].y == apple.y;
+}
+
+void growing()
+{
+    snake.push_back(prevTail);
 }
