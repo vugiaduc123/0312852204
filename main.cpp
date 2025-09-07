@@ -1,16 +1,76 @@
 #include <iostream>
+#include <vector>
+#include <ctime>
+#include <cctype>
+
+#ifdef _WIN32
 #include <windows.h>
-#include <termios.h> // cho tcflush, TCIFLUSH
-#include <unistd.h>  // cho STDIN_FILENO
-#include <cstdlib>
 #include <conio.h>
-#include <time.h>
+#else
+#include <termios.h> // cho tcflu`sh, TCIFLUSH
+#include <unistd.h>  // cho STDIN_FILENO
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#endif
+
+#include <stdio.h>
 
 using namespace std;
+
+#define WIDTH 40
+#define HEIGHT 20
+#define BODY '*'
+#define APPLE 'O'
+int score = 0;
+int speed = 100;
+/*
+ * Enum
+ */
+enum class Direction
+{
+    up,
+    right,
+    down,
+    left
+};
+
+// Each point is a part of the snake
+struct Point
+{
+    int x;
+    int y;
+};
+std::vector<Point> snake = {
+    {WIDTH / 2 + 2, HEIGHT / 2},
+    {WIDTH / 2 + 1, HEIGHT / 2},
+    {WIDTH / 2, HEIGHT / 2},
+    {WIDTH / 2 - 1, HEIGHT / 2},
+    {WIDTH / 2 - 2, HEIGHT / 2}};
+Direction direction = Direction::right;
+Point prevTail;
+Point apple;
+
 void displayScore();
 void setBufferedInput(bool);
 void resetSnake();
+void showEndMenu();
+void startGame();
+bool isHitWall();
+void move();
+void growing();
+bool isBiteItself();
+bool isAteApple();
+void drawBox();
+void drawHeadnTail();
+void clearSnake();
+void drawSnakePart(Point);
+void drawSnake();
+void genApple();
+void redrawApple();
 
+#ifdef _WIN32
+// Windows-specific implementations
 void ShowConsoleCursor(bool showFlag)
 {
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -19,23 +79,40 @@ void ShowConsoleCursor(bool showFlag)
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 }
 
-int main()
+void setBufferedInput(bool enable)
 {
     setBufferedInput(false);
     showStartMenu();
     setBufferedInput(true);
     return 0;
-}
-
-void gotoxy(int x, int y)
-{
-    printf("\033[%d;%dH", y + 1, x + 1);
-    fflush(stdout);
-}
-
-void setBufferedInput(bool enable)
-{
     // Không cần cài đặt trên Windows với _getch()
+}
+
+void flushInput()
+{
+    // Không cần flush trên Windows với _getch()
+}
+void clearScreen()
+{
+    system("cls");
+}
+bool kbhit()
+{
+    return _kbhit();
+}
+
+char getch()
+{
+    return _getch();
+}
+#else
+void ShowConsoleCursor(bool showFlag)
+{
+    if (showFlag)
+        printf("\e[?25h");
+    else
+        printf("\e[?25l");
+    fflush(stdout);
 }
 
 void setBufferedInput(bool enable)
@@ -63,12 +140,262 @@ void setBufferedInput(bool enable)
 // Delete Buffer Input
 void flushInput()
 {
-    // Không cần flush trên Windows với _getch()
+    tcflush(STDIN_FILENO, TCIFLUSH);
 }
 
-void flushInput()
+void clearScreen()
 {
-    tcflush(STDIN_FILENO, TCIFLUSH);
+    printf("\033[2J\033[1;1H");
+}
+
+bool kbhit()
+{
+    struct termios oldt, newt;
+    struct timeval tv = {0, 50000}; // Giảm timeout xuống 50ms
+    fd_set fds;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 0;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    int result = select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return result > 0 && FD_ISSET(STDIN_FILENO, &fds);
+}
+
+char getch()
+{
+    char c;
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 1;
+    newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    if (read(STDIN_FILENO, &c, 1) < 0)
+        c = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return c;
+}
+#endif
+
+int main()
+{
+    return 0;
+}
+// show start menu section
+void startGame()
+{
+    setBufferedInput(false);
+    flushInput();
+    ShowConsoleCursor(false);
+    clearScreen();
+    drawBox();
+    drawSnake();
+    genApple();
+    redrawApple();
+    displayScore();
+
+    while (true)
+    {
+        if (kbhit())
+        {
+            char ch = getch();
+            // flushInput();
+            ch = tolower(ch);
+            if (ch == 'a' && direction != Direction::right)
+                direction = Direction::left;
+            else if (ch == 'w' && direction != Direction::down)
+                direction = Direction::up;
+            else if (ch == 's' && direction != Direction::up)
+                direction = Direction::down;
+            else if (ch == 'd' && direction != Direction::left)
+                direction = Direction::right;
+            else if (ch == 'q')
+            {
+                ShowConsoleCursor(true);
+                showEndMenu();
+                break;
+            }
+        }
+        move();
+        redrawApple();
+        displayScore();
+
+        Point oldApple = apple;
+        if (isAteApple())
+        {
+            gotoxy(oldApple.x, oldApple.y);
+            std::cout << ' ' << std::flush;
+            score++;
+            growing();
+            clearSnake();
+            drawSnake();
+            genApple();
+            redrawApple();
+        }
+        else
+        {
+            drawHeadnTail();
+        }
+
+        if (isBiteItself() || isHitWall())
+        {
+            ShowConsoleCursor(true);
+            showEndMenu();
+            break;
+        }
+#ifdef _WIN32
+        Sleep(speed);
+#else
+        usleep(speed * 1000);
+#endif
+    }
+}
+
+void showStartMenu()
+{
+    clearScreen();
+    std::cout << "Welcome to snake game!" << std::endl;
+    std::cout << "\nControl the snake to eat the apples (O) that appear on the screen\nAvoid crashing into the walls or your own body — doing so will end the game.\nHow long can you survive? Let's find out!" << std::endl;
+    std::cout << "\n\nOptions:" << std::endl;
+    std::cout << "1. Start" << std::endl;
+    std::cout << "2. Quit" << std::endl;
+    std::cout << "Your choice: " << std::flush;
+    setBufferedInput(true);
+    flushInput(); // xoá input cũ
+    int option;
+    std::cin >> option;
+    flushInput(); // xoá \n còn lại
+    setBufferedInput(false);
+    if (option == 1)
+    {
+        clearScreen();
+        std::cout << "Choose your level (1 - 5): " << std::flush;
+        int t;
+        std::cin >> t;
+        if (t < 1 || t > 5)
+            t = 1;
+        speed = 300 - t * 50;
+        clearScreen();
+        std::cout << "Tip: While playing game, you can press 'q' to quit" << std::endl;
+        gotoxy(0, 3);
+        std::cout << "Ready!" << std::flush;
+#ifdef _WIN32
+        Sleep(1000);
+#else
+        usleep(1000000);
+#endif
+        for (size_t i = 3; i > 0; i--)
+        {
+            gotoxy(0, 3);
+            std::cout << i << "         " << std::flush;
+#ifdef _WIN32
+            Sleep(1000);
+#else
+            usleep(1000000);
+#endif
+        }
+        gotoxy(0, 3);
+        std::cout << "GO!" << std::flush;
+#ifdef _WIN32
+        Sleep(1000);
+#else
+        usleep(1000000);
+#endif
+        startGame();
+    }
+    else
+    {
+        setBufferedInput(true);
+        clearScreen();
+        exit(0);
+    }
+}
+
+// Show end menu section
+void showEndMenu()
+{
+    clearScreen();
+    gotoxy(0, 0);
+    std::cout << "End game!" << std::endl;
+    std::cout << "Your score: " << score << std::endl;
+    std::cout << "Do you want to play again ([y]/[n]): " << std::flush;
+    setBufferedInput(true);
+    flushInput();
+    char option;
+    std::cin >> option;
+    option = tolower(option);
+    setBufferedInput(false);
+    if (option == 'y')
+    {
+        // reset lại rắn và start game
+    }
+    else
+    {
+        setBufferedInput(true);
+        clearScreen();
+        exit(0);
+    }
+}
+
+void drawBox()
+{
+    clearScreen();
+    for (size_t i = 0; i <= WIDTH; i++)
+    {
+        gotoxy(i, 0);
+        std::cout << '=' << std::flush;
+        gotoxy(i, HEIGHT);
+        std::cout << '=' << std::flush;
+    }
+    for (size_t i = 1; i < HEIGHT; i++)
+    {
+        gotoxy(0, i);
+        std::cout << '|' << std::flush;
+        gotoxy(WIDTH, i);
+        std::cout << '|' << std::flush;
+    }
+}
+
+void gotoxy(int x, int y)
+{
+    printf("\033[%d;%dH", y + 1, x + 1);
+    fflush(stdout);
+}
+
+// Move snake function
+void move()
+{
+    Point newHead = snake[0];
+    switch (direction)
+    {
+    case Direction::up:
+        newHead.y--;
+        break;
+    case Direction::down:
+        newHead.y++;
+        break;
+    case Direction::left:
+        newHead.x--;
+        break;
+    case Direction::right:
+        newHead.x++;
+        break;
+    }
+    prevTail = snake.back();
+    snake.insert(snake.begin(), newHead);
+    snake.pop_back();
+}
+
+void drawSnakePart(Point p)
+{
+    gotoxy(p.x, p.y);
+    std::cout << BODY << std::flush;
 }
 
 void displayScore()
@@ -92,9 +419,132 @@ void resetSnake()
     score = 0;
     direction = Direction::right;
     snake.clear();
-    snake.push_back({ WIDTH / 2 + 2, HEIGHT / 2 });
-    snake.push_back({ WIDTH / 2 + 1, HEIGHT / 2 });
-    snake.push_back({ WIDTH / 2, HEIGHT / 2 });
-    snake.push_back({ WIDTH / 2 - 1, HEIGHT / 2 });
-    snake.push_back({ WIDTH / 2 - 2, HEIGHT / 2 });
+    snake.push_back({WIDTH / 2 + 2, HEIGHT / 2});
+    snake.push_back({WIDTH / 2 + 1, HEIGHT / 2});
+    snake.push_back({WIDTH / 2, HEIGHT / 2});
+    snake.push_back({WIDTH / 2 - 1, HEIGHT / 2});
+    snake.push_back({WIDTH / 2 - 2, HEIGHT / 2});
+}
+
+void clearSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        gotoxy(snake[i].x, snake[i].y);
+        std::cout << ' ' << std::flush;
+    }
+}
+void drawSnake()
+{
+    for (size_t i = 0; i < snake.size(); i++)
+    {
+        if (i == 0)
+        {
+            gotoxy(snake[0].x, snake[0].y);
+            char headChar;
+            switch (direction)
+            {
+            case Direction::up:
+                headChar = '^';
+                break;
+            case Direction::down:
+                headChar = 'v';
+                break;
+            case Direction::left:
+                headChar = '<';
+                break;
+            case Direction::right:
+                headChar = '>';
+                break;
+            }
+            std::cout << headChar << std::flush;
+        }
+        else
+        {
+            drawSnakePart(snake[i]);
+        }
+    }
+}
+
+bool isHitWall()
+{
+    return snake[0].x <= 0 || snake[0].y <= 0 || snake[0].x >= WIDTH || snake[0].y >= HEIGHT;
+}
+
+void genApple()
+{
+    int x, y;
+    bool validPosition;
+    do
+    {
+        validPosition = true;          // Assume position is valid until proven otherwise
+        x = rand() % (WIDTH - 2) + 1;  // Random x-coordinate within bounds
+        y = rand() % (HEIGHT - 2) + 1; // Random y-coordinate within bounds
+        for (size_t i = 0; i < snake.size(); i++)
+        {
+            if (snake[i].x == x && snake[i].y == y)
+            {
+                validPosition = false; // Position overlaps with snake
+                break;
+            }
+        }
+    } while (!validPosition); // Repeat until a valid position is found
+    apple.x = x;
+    apple.y = y;
+}
+
+void drawHeadnTail()
+{
+    gotoxy(snake[0].x, snake[0].y);
+    char headChar;
+    switch (direction)
+    {
+    case Direction::up:
+        headChar = '^';
+        break;
+    case Direction::down:
+        headChar = 'v';
+        break;
+    case Direction::left:
+        headChar = '<';
+        break;
+    case Direction::right:
+        headChar = '>';
+        break;
+    }
+    std::cout << headChar << std::flush;
+
+    if (snake.size() > 1)
+    {
+        gotoxy(snake[1].x, snake[1].y);
+        std::cout << '*' << std::flush;
+    }
+
+    gotoxy(prevTail.x, prevTail.y);
+    std::cout << ' ' << std::flush;
+}
+
+void redrawApple()
+{
+    gotoxy(apple.x, apple.y);
+    std::cout << APPLE << std::flush;
+}
+
+void growing()
+{
+    snake.push_back(prevTail);
+}
+
+bool isBiteItself()
+{
+    Point head = snake[0];
+    for (size_t i = 1; i < snake.size(); i++)
+        if (head.x == snake[i].x && head.y == snake[i].y)
+            return true;
+    return false;
+}
+
+bool isAteApple()
+{
+    return snake[0].x == apple.x && snake[0].y == apple.y;
 }
