@@ -21,6 +21,9 @@ void ShowConsoleCursor(bool showFlag)
 
 int main()
 {
+    setBufferedInput(false);
+    showStartMenu();
+    setBufferedInput(true);
     return 0;
 }
 
