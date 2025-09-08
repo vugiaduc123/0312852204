@@ -358,7 +358,8 @@ void showEndMenu()
     setBufferedInput(false);
     if (option == 'y')
     {
-        // reset lại rắn và start game
+        resetSnake();
+        startGame();
     }
     else
     {
