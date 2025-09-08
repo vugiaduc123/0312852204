@@ -359,6 +359,7 @@ void showEndMenu()
     if (option == 'y')
     {
         // reset lại rắn và start game
+        // duc conflict
         // resetSnake()
     }
     else
