@@ -74,8 +74,10 @@ void startGame();
 void resetSnake();
 void clearSnake();
 void showStartMenu();
+#ifndef _WIN32
 bool kbhit();
 char getch();
+#endif
 void flushInput();
 void setBufferedInput(bool);
 #pragma endregion
@@ -92,10 +94,6 @@ void ShowConsoleCursor(bool showFlag)
 
 void setBufferedInput(bool enable)
 {
-    setBufferedInput(false);
-    showStartMenu();
-    setBufferedInput(true);
-    return 0;
     // Không cần cài đặt trên Windows với _getch()
 }
 
@@ -115,16 +113,6 @@ void flushInput()
 void clearScreen()
 {
     system("cls");
-}
-
-bool kbhit()
-{
-    return _kbhit();
-}
-
-char getch()
-{
-    return _getch();
 }
 
 #else
@@ -203,6 +191,13 @@ char getch()
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     return c;
 }
+
+void gotoxy(int x, int y)
+{
+    printf("\033[%d;%dH", y + 1, x + 1);
+    fflush(stdout);
+}
+
 #endif
 
 int main()
@@ -386,12 +381,6 @@ void drawBox()
         gotoxy(WIDTH, i);
         std::cout << '|' << std::flush;
     }
-}
-
-void gotoxy(int x, int y)
-{
-    printf("\033[%d;%dH", y + 1, x + 1);
-    fflush(stdout);
 }
 
 // Move snake function
